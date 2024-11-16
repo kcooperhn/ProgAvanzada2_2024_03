@@ -121,13 +121,30 @@ public class AlumnosView extends Div implements BeforeEnterObserver, AlumnosView
         save.addClickListener(e -> {
             try {
                 if (this.alumno == null) {
+                	//ENTRA AQUI SI EL ALUMNO ES NUEVO
                     this.alumno = new Alumno();
+                    this.alumno.setNombre(nombre.getValue());
+                    this.alumno.setApellido(apellido.getValue());
+                    this.alumno.setCorreo(correo.getValue());
+                    this.alumno.setTelefono(telefono.getValue());
+                    this.alumno.setFecha_nacimiento(fechaNacimiento.getValue());
+                    this.alumno.setCarrera(carrera.getValue());
+                    
+                    this.controlador.crearAlumno(alumno);
+                }else {
+                	//ENTRA AQUI SI EL ALUMNO YA EXISTIA
+                	this.alumno.setNombre(nombre.getValue());
+                    this.alumno.setApellido(apellido.getValue());
+                    this.alumno.setCorreo(correo.getValue());
+                    this.alumno.setTelefono(telefono.getValue());
+                    this.alumno.setFecha_nacimiento(fechaNacimiento.getValue());
+                    this.alumno.setCarrera(carrera.getValue());
+                    
+                    this.controlador.actualizarAlumno(alumno);
+                	
                 }
-                //binder.writeBean(this.alumno);
-                
                 clearForm();
                 refreshGrid();
-                Notification.show("Data updated");
                 UI.getCurrent().navigate(AlumnosView.class);
             } catch (ObjectOptimisticLockingFailureException exception) {
                 Notification n = Notification.show(
@@ -234,6 +251,7 @@ public class AlumnosView extends Div implements BeforeEnterObserver, AlumnosView
     private void refreshGrid() {
         grid.select(null);
         grid.getDataProvider().refreshAll();
+        this.controlador.consultarAlumnos();
     }
 
     private void clearForm() {
@@ -254,13 +272,11 @@ public class AlumnosView extends Div implements BeforeEnterObserver, AlumnosView
             apellido.setValue(value.getApellido());
             correo.setValue(value.getCorreo());
             telefono.setValue(value.getTelefono());
-			LocalDate fechaNac = LocalDate.parse(
-					value.getFecha_nacimiento(), 
-					DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
+            LocalDate fechaNac = value.getFecha_nacimiento().toLocalDate();
+			
 			fechaNacimiento.setValue(fechaNac);
             carrera.setValue(value.getCarrera());
         }
-
     }
 
 	@Override

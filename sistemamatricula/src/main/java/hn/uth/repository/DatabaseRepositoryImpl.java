@@ -2,9 +2,11 @@ package hn.uth.repository;
 
 import java.io.IOException;
 
+import hn.uth.data.Alumno;
 import hn.uth.data.AlumnosResponse;
 import retrofit2.Response;
 import retrofit2.Call;
+import okhttp3.ResponseBody;
 
 public class DatabaseRepositoryImpl {
 
@@ -36,5 +38,17 @@ public class DatabaseRepositoryImpl {
 		}else {
 			return null;
 		}
+	}
+	
+	public boolean crearAlumno(Alumno nuevo) throws IOException {
+		Call<ResponseBody> call = client.getDatabase().crearAlumno(nuevo);
+		Response<ResponseBody> response = call.execute();//AQUI SE PRODUCE LA LLAMADA
+		return response.isSuccessful();
+	}
+	
+	public boolean actualizarAlumno(Alumno existente) throws IOException {
+		Call<ResponseBody> call = client.getDatabase().actualizarAlumno(existente);
+		Response<ResponseBody> response = call.execute();//AQUI SE PRODUCE LA LLAMADA
+		return response.isSuccessful();
 	}
 }

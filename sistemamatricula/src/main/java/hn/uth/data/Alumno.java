@@ -1,5 +1,6 @@
 package hn.uth.data;
 
+import java.sql.Date;
 import java.time.LocalDate;
 
 public class Alumno extends AbstractEntity {
@@ -9,7 +10,7 @@ public class Alumno extends AbstractEntity {
     private String correo;
     private String telefono;
     //private LocalDate fechaNacimiento;
-    private String fecha_nacimiento;
+    private Date fecha_nacimiento;
     private String carrera;
 
     public String getNombre() {
@@ -48,11 +49,14 @@ public class Alumno extends AbstractEntity {
     public void setCarrera(String carrera) {
         this.carrera = carrera;
     }
-	public String getFecha_nacimiento() {
+	public Date getFecha_nacimiento() {
 		return fecha_nacimiento;
 	}
-	public void setFecha_nacimiento(String fecha_nacimiento) {
-		this.fecha_nacimiento = fecha_nacimiento;
+	public void setFecha_nacimiento(LocalDate fecha_nacimiento) {
+		this.fecha_nacimiento = convertirFecha(fecha_nacimiento);
 	}
 
+	private Date convertirFecha(LocalDate fecha) {
+		return Date.valueOf(fecha);
+	}
 }

@@ -1,6 +1,7 @@
 package hn.uth.views.matricula;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -8,6 +9,10 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -33,21 +38,36 @@ import com.vaadin.flow.theme.lumo.LumoUtility.MaxWidth;
 import com.vaadin.flow.theme.lumo.LumoUtility.Padding;
 import com.vaadin.flow.theme.lumo.LumoUtility.Position;
 import com.vaadin.flow.theme.lumo.LumoUtility.TextColor;
+
+import hn.uth.controller.MatriculaInteractor;
+import hn.uth.controller.MatriculaInteractorImpl;
+import hn.uth.data.Alumno;
+
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Set;
 
 @PageTitle("Matricula")
 @Route("checkout-form")
 @Menu(order = 2, icon = "line-awesome/svg/credit-card.svg")
-public class MatriculaView extends Div {
+public class MatriculaView extends Div implements MatriculaViewModel {
 
     private static final Set<String> states = new LinkedHashSet<>();
     private static final Set<String> countries = new LinkedHashSet<>();
+    private ComboBox<Alumno> alumno;
+    private List<Alumno> alumnos;
+    
+    private MatriculaInteractor controlador;
 
     public MatriculaView() {
         addClassNames("matricula-view");
         addClassNames(Display.FLEX, FlexDirection.COLUMN, Height.FULL);
+        
+        controlador = new MatriculaInteractorImpl(this);
+        alumnos = new ArrayList<>();
 
         Main content = new Main();
         content.addClassNames(Display.GRID, Gap.XLARGE, AlignItems.START, JustifyContent.CENTER, MaxWidth.SCREEN_MEDIUM,
@@ -56,6 +76,8 @@ public class MatriculaView extends Div {
         content.add(createCheckoutForm());
         content.add(createAside());
         add(content);
+        
+        controlador.consultarAlumnos();
     }
 
     private Component createCheckoutForm() {
@@ -87,7 +109,7 @@ public class MatriculaView extends Div {
         H3 header = new H3("Información del Alumno");
         header.addClassNames(Margin.Bottom.MEDIUM, Margin.Top.SMALL, FontSize.XXLARGE);
         
-        ComboBox<String> alumno = new ComboBox<>("Alumno");
+        alumno = new ComboBox<>("Alumno");
         alumno.setAllowCustomValue(true);
 
         EmailField email = new EmailField("Correo Electrónico");
@@ -249,4 +271,34 @@ public class MatriculaView extends Div {
         item.add(subSection, priceSpan);
         return item;
     }
+
+	@Override
+	public void mostrarAlumnosEnComboBox(List<Alumno> items) {
+		Collection<Alumno> itemsCollection = items;
+		this.alumnos = items;
+		alumno.setItems(itemsCollection);
+		alumno.setItemLabelGenerator(
+		        person -> person.getNombre() + " " + person.getApellido());
+	}
+
+	@Override
+	public void mostrarMensajeError(String mensaje) {
+		Notification notification = new Notification();
+		notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+
+		Div text = new Div(new Text(mensaje));
+
+		Button closeButton = new Button(new Icon("lumo", "cross"));
+		closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+		closeButton.setAriaLabel("Close");
+		closeButton.addClickListener(event -> {
+		    notification.close();
+		});
+
+		HorizontalLayout layout = new HorizontalLayout(text, closeButton);
+		layout.setAlignItems(Alignment.CENTER);
+
+		notification.add(layout);
+		notification.open();
+	}
 }
