@@ -61,4 +61,19 @@ public class AlumnosInteractorImpl implements AlumnosInteractor{
 		}
 	}
 
+
+	@Override
+	public void eliminarAlumno(Integer id) {
+		try {
+			boolean actualizado = this.modelo.eliminarAlumno(id);
+			if(actualizado) {
+				this.vista.mostrarMensajeExito("Alumno eliminado correctamente!");
+			}else {
+				this.vista.mostrarMensajeError("Hay un problema al borrar este alumno");
+			}
+		}catch(Exception error) {
+			error.printStackTrace();
+		}
+	}
+
 }

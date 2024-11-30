@@ -51,4 +51,10 @@ public class DatabaseRepositoryImpl {
 		Response<ResponseBody> response = call.execute();//AQUI SE PRODUCE LA LLAMADA
 		return response.isSuccessful();
 	}
+	
+	public boolean eliminarAlumno(Integer idAlumno) throws IOException {
+		Call<ResponseBody> call = client.getDatabase().eliminarAlumno(idAlumno);
+		Response<ResponseBody> response = call.execute();//AQUI SE PRODUCE LA LLAMADA
+		return response.isSuccessful();
+	}
 }

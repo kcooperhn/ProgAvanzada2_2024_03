@@ -7,4 +7,5 @@ public interface AlumnosInteractor {
 	void consultarAlumnos();
 	void crearAlumno(Alumno nuevo);
 	void actualizarAlumno(Alumno existente);
+	void eliminarAlumno(Integer id);
 }

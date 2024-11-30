@@ -1,5 +1,7 @@
 package hn.uth.views.alumnos;
 
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -8,7 +10,10 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
+import com.vaadin.flow.component.grid.contextmenu.GridMenuItem;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -105,6 +110,39 @@ public class AlumnosView extends Div implements BeforeEnterObserver, AlumnosView
                 UI.getCurrent().navigate(AlumnosView.class);
             }
         });
+        
+        GridContextMenu<Alumno> menu = grid.addContextMenu();
+        
+        GridMenuItem<Alumno> generateReport = menu.addItem("Generar Reporte", event -> {});
+        generateReport.addComponentAsFirst(createIcon(VaadinIcon.DOWNLOAD));
+        menu.add(new Hr());
+
+
+        GridMenuItem<Alumno> delete = menu.addItem("Eliminar Alumno", event -> {
+        	
+        	if(event != null && event.getItem() != null) {
+        		Alumno alumnoEliminar = event.getItem().get();
+        		ConfirmDialog dialog = new ConfirmDialog();
+            	dialog.setHeader("¿Eliminar a "+alumnoEliminar.getNombre()+" "+alumnoEliminar.getApellido()+"?");
+            	dialog.setText("¿Estás seguro que deseas eliminar de forma permanente a este alumno?");
+
+            	dialog.setCancelable(true);
+            	dialog.setCancelText("No");
+            	dialog.addCancelListener(eventDelete -> {});
+
+            	dialog.setConfirmText("Si, Eliminar");
+            	dialog.setConfirmButtonTheme("error primary");
+            	dialog.addConfirmListener(eventDelete -> {
+            		controlador.eliminarAlumno(alumnoEliminar.getId().intValue());
+            		refreshGrid();
+            	});
+            	dialog.open();
+        	}
+        });
+        delete.addComponentAsFirst(createIcon(VaadinIcon.TRASH));
+        
+        GridMenuItem<Alumno> deleteAll = menu.addItem("Eliminar Todo", event -> {});
+        deleteAll.addComponentAsFirst(createIcon(VaadinIcon.FILE_REMOVE));
 
         // Configure Form
         //binder = new BeanValidationBinder<>(Alumno.class);
@@ -127,7 +165,11 @@ public class AlumnosView extends Div implements BeforeEnterObserver, AlumnosView
                     this.alumno.setApellido(apellido.getValue());
                     this.alumno.setCorreo(correo.getValue());
                     this.alumno.setTelefono(telefono.getValue());
-                    this.alumno.setFecha_nacimiento(fechaNacimiento.getValue());
+                    if(fechaNacimiento.getValue() == null) {
+                    	this.alumno.setFecha_nacimiento(LocalDate.now());
+                    }else {
+                    	this.alumno.setFecha_nacimiento(fechaNacimiento.getValue());
+                    }
                     this.alumno.setCarrera(carrera.getValue());
                     
                     this.controlador.crearAlumno(alumno);
@@ -137,7 +179,11 @@ public class AlumnosView extends Div implements BeforeEnterObserver, AlumnosView
                     this.alumno.setApellido(apellido.getValue());
                     this.alumno.setCorreo(correo.getValue());
                     this.alumno.setTelefono(telefono.getValue());
-                    this.alumno.setFecha_nacimiento(fechaNacimiento.getValue());
+                    if(fechaNacimiento.getValue() == null) {
+                    	this.alumno.setFecha_nacimiento(LocalDate.now());
+                    }else {
+                    	this.alumno.setFecha_nacimiento(fechaNacimiento.getValue());
+                    }
                     this.alumno.setCarrera(carrera.getValue());
                     
                     this.controlador.actualizarAlumno(alumno);
@@ -155,6 +201,14 @@ public class AlumnosView extends Div implements BeforeEnterObserver, AlumnosView
         });
         
         controlador.consultarAlumnos();
+    }
+    
+    private Component createIcon(VaadinIcon vaadinIcon) {
+        Icon icon = vaadinIcon.create();
+        icon.getStyle().set("color", "var(--lumo-secondary-text-color)")
+                .set("margin-inline-end", "var(--lumo-space-s")
+                .set("padding", "var(--lumo-space-xs");
+        return icon;
     }
 
     @Override
@@ -193,31 +247,34 @@ public class AlumnosView extends Div implements BeforeEnterObserver, AlumnosView
 
         FormLayout formLayout = new FormLayout();
         nombre = new TextField("Nombre");
+        nombre.setId("txtNombre");
         nombre.setClearButtonVisible(true);
         nombre.setPrefixComponent(VaadinIcon.CLIPBOARD_USER.create());
         
         apellido = new TextField("Apellido");
+        apellido.setId("txtApellido");
         apellido.setClearButtonVisible(true);
         apellido.setPrefixComponent(VaadinIcon.CLIPBOARD_USER.create());
         
         correo = new TextField("Correo");
+        correo.setId("txtCorreo");
         correo.setClearButtonVisible(true);
         correo.setPrefixComponent(VaadinIcon.MAILBOX.create());
         
         telefono = new TextField("Telefono");
+        telefono.setId("txtTelefono");
         telefono.setClearButtonVisible(true);
         telefono.setPrefixComponent(VaadinIcon.PHONE.create());
         telefono.setHelperText("Formato: +(504)9988-7766");
         
         fechaNacimiento = new DatePicker("Fecha Nacimiento");
+        fechaNacimiento.setId("dpFechaNac");
         LocalDate now = LocalDate.now(ZoneId.systemDefault());
         fechaNacimiento.setMin(now.plusYears(-50));
         fechaNacimiento.setMax(now.plusDays(-60));
         
-        
-        
-        
         carrera = new TextField("Carrera");
+        carrera.setId("txtCarrera");
         formLayout.add(nombre, apellido, correo, telefono, fechaNacimiento, carrera);
 
         editorDiv.add(formLayout);
@@ -231,11 +288,10 @@ public class AlumnosView extends Div implements BeforeEnterObserver, AlumnosView
         buttonLayout.setClassName("button-layout");
         cancel.addThemeVariants(ButtonVariant.LUMO_PRIMARY,
                 ButtonVariant.LUMO_ERROR);
-        
+        cancel.setId("btnCancelar");
         
         save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        
-        
+        save.setId("btnGuardar");
         
         buttonLayout.add(save, cancel);
         editorLayoutDiv.add(buttonLayout);
