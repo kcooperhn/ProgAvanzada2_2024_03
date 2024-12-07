@@ -23,31 +23,29 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.binder.BeanValidationBinder;
-import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import com.vaadin.flow.component.html.Anchor;
 
 import hn.uth.controller.AlumnosInteractor;
 import hn.uth.controller.AlumnosInteractorImpl;
 import hn.uth.data.Alumno;
+import hn.uth.data.AlumnosReport;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.time.LocalDate;
-import java.time.Month;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Optional;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import java.util.Collection;
+import hn.uth.service.ReportGenerator;
 
 @PageTitle("Alumnos")
 @Route("/:alumnoID?/:action?(edit)")
@@ -113,7 +111,9 @@ public class AlumnosView extends Div implements BeforeEnterObserver, AlumnosView
         
         GridContextMenu<Alumno> menu = grid.addContextMenu();
         
-        GridMenuItem<Alumno> generateReport = menu.addItem("Generar Reporte", event -> {});
+        GridMenuItem<Alumno> generateReport = menu.addItem("Generar Reporte", event -> {
+        	generarReporte();
+        });
         generateReport.addComponentAsFirst(createIcon(VaadinIcon.DOWNLOAD));
         menu.add(new Hr());
 
@@ -143,13 +143,6 @@ public class AlumnosView extends Div implements BeforeEnterObserver, AlumnosView
         
         GridMenuItem<Alumno> deleteAll = menu.addItem("Eliminar Todo", event -> {});
         deleteAll.addComponentAsFirst(createIcon(VaadinIcon.FILE_REMOVE));
-
-        // Configure Form
-        //binder = new BeanValidationBinder<>(Alumno.class);
-
-        // Bind fields. This is where you'd define e.g. validation rules
-
-        //binder.bindInstanceFields(this);
 
         cancel.addClickListener(e -> {
             clearForm();
@@ -203,7 +196,31 @@ public class AlumnosView extends Div implements BeforeEnterObserver, AlumnosView
         controlador.consultarAlumnos();
     }
     
-    private Component createIcon(VaadinIcon vaadinIcon) {
+    private void generarReporte() {
+    	mostrarMensajeExito("Generando Reporte de Alumnos...");
+    	ReportGenerator generador = new ReportGenerator();
+    	AlumnosReport datasource = new AlumnosReport();
+    	datasource.setItems(alumnos);
+    	Map<String, Object> parameters = new HashMap<>();
+    	parameters.put("LOGO_IMG", "logo-uth.png");
+    	
+    	boolean generado = generador.generarReportePDF("listadoalumnos", datasource, parameters);
+    	if(generado) {
+    		String ubicacion = generador.getUbicacionReporte();
+    		Anchor url = new Anchor(ubicacion, "Abrir Reporte en el Navegador");
+    		url.setTarget("_blank");
+    		
+    		Notification notificacionReporte = new Notification(url);
+    		notificacionReporte.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+    		notificacionReporte.setPosition(Position.MIDDLE);
+    		notificacionReporte.setDuration(15000);
+    		notificacionReporte.open();
+    	}else {
+    		mostrarMensajeError("Algo salio mal al generar el reporte");
+    	}
+	}
+
+	private Component createIcon(VaadinIcon vaadinIcon) {
         Icon icon = vaadinIcon.create();
         icon.getStyle().set("color", "var(--lumo-secondary-text-color)")
                 .set("margin-inline-end", "var(--lumo-space-s")
